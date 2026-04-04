@@ -1,1 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>経絡マスター Pro</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; }
+        .quiz-info { color: #7f8c8d; margin-bottom: 10px; text-align: center; }
+        .question { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; text-align: center; color: #1a2a3a; }
+        .option-btn { 
+            display: block; width: 100%; padding: 15px; margin: 10px 0; 
+            border: 2px solid #e0e6ed; border-radius: 10px; background: white;
+            font-size: 1rem; cursor: pointer; text-align: left; transition: 0.2s;
+        }
+        .option-btn:hover { background: #f0f9ff; border-color: #3498db; }
+        .correct { background: #e8f5e9 !important; border-color: #4caf50 !important; color: #2e7d32; font-weight: bold; }
+        .wrong { background: #ffebee !important; border-color: #ef5350 !important; color: #c62828; }
+        #next-btn { 
+            display: none; width: 100%; padding: 15px; background: #3498db; 
+            color: white; border: none; border-radius: 10px; font-size: 1.2rem; cursor: pointer; margin-top: 20px;
+        }
+        .explanation { display: none; margin-top: 20px; padding: 15px; background: #fff9db; border-left: 5px solid #f1c40f; border-radius: 5px; }
+    </style>
+</head>
+<body>
 
+    <h1>📍 経絡マスター Pro</h1>
+    <div id="setup-area" class="card">
+        <p style="text-align:center;">CSVデータを読み込んでいます...</p>
+    </div>
+
+    <div id="quiz-area" class="card" style="display:none;">
+        <div class="quiz-info" id="quiz-progress"></div>
+        <div class="question" id="question-text"></div>
+        <div id="options-container"></div>
+        <div id="explanation-box" class="explanation"></div>
+        <button id="next-btn" onclick="nextQuestion()">次の問題へ ➔</button>
+    </div>
+
+<script>
+let masterData = [];
+let quizSet = [];
+let currentIndex = 0;
+
+// 1. CSVを読み込む
+window.onload = async function() {
+    try {
+        const response = await fetch('data1.csv');
+        const csvText = await response.text();
+        masterData = parseCSV(csvText);
+        
+        if(masterData.length > 0) {
+            startQuiz();
+        }
+    } catch (e) {
+        document.getElementById('setup-area').innerHTML = "⚠️ データの読み込みに失敗しました。";
+    }
+};
+
+function parseCSV(text) {
+    const lines = text.trim().split(/\r?\n/);
+    const headers = lines[0].split(',');
+    return lines.slice(1).map(line => {
+        const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        let obj = {};
+        headers.forEach((h, i) => {
+            obj[h.trim()] = values[i] ? values[i].trim().replace(/^"|"$/g, '') : "";
+        });
+        return obj;
+    });
+}
+
+function startQuiz() {
+    quizSet = [...masterData].sort(() => Math.random() - 0.5).slice(0, 10); // ランダムに10問
+    document.getElementById('setup-area').style.display = 'none';
+    document.getElementById('quiz-area').style.display = 'block';
+    showQuestion();
+}
+
+function showQuestion() {
+    const q = quizSet[currentIndex];
+    document.getElementById('quiz-progress').innerText = `${currentIndex + 1} / ${quizSet.length} [${q.所属経絡}]`;
+    document.getElementById('question-text').innerText = `${q.経穴名} (${q.読み}) の部位は？`;
+    
+    const container = document.getElementById('options-container');
+    container.innerHTML = '';
+
+    // 正解と不正解を混ぜて4択を作る
+    let options = [q.部位];
+    while(options.length < 4) {
+        let randomQ = masterData[Math.floor(Math.random() * masterData.length)];
+        if(!options.includes(randomQ.部位)) options.push(randomQ.部位);
+    }
+    options.sort(() => Math.random() - 0.5);
+
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(opt, btn, q.部位);
+        container.appendChild(btn);
+    });
+
+    document.getElementById('explanation-box').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'none';
+}
+
+function checkAnswer(selected, btn, correct) {
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(b => b.disabled = true);
+
+    if(selected === correct) {
+        btn.classList.add('correct');
+    } else {
+        btn.classList.add('wrong');
+        btns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
+    }
+
+    const q = quizSet[currentIndex];
+    const exp = document.getElementById('explanation-box');
+    exp.style.display = 'block';
+    exp.innerHTML = `<strong>【解説】</strong><br>取穴法：${q.取穴法（指標）}<br>解剖：${q.解剖}<br>備考：${q.備考（属性タグ・別説含む）}`;
+    
+    document.getElementById('next-btn').style.display = 'block';
+}
+
+function nextQuestion() {
+    currentIndex++;
+    if(currentIndex < quizSet.length) {
+        showQuestion();
+    } else {
+        alert("10問終了です！お疲れ様でした。");
+        location.reload();
+    }
+}
+</script>
+</body>
+</html>
