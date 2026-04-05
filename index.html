@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>経穴マスター Pro - 辞典</title>
+    <style>
+        :root {
+            --main-blue: #007AFF;
+            --bg-light: #F2F2F7;
+            --card-bg: #FFFFFF;
+            --tag-bo: #FF9500;   /* 募穴: オレンジ */
+            --tag-gen: #5856D6;  /* 原穴: 紫 */
+            --tag-geki: #FF3B30; /* 郄穴: 赤 */
+            --tag-raku: #34C759; /* 絡穴: 緑 */
+        }
+        body { font-family: -apple-system, sans-serif; background: var(--bg-light); margin: 0; padding: env(safe-area-inset-top) 15px; color: #1C1C1E; }
+        
+        .header { position: sticky; top: 0; background: var(--bg-light); padding: 15px 0 10px; z-index: 100; }
+        h1 { font-size: 1.4rem; margin: 0 0 10px; text-align: center; color: #000; }
+        
+        #search-box {
+            width: 100%; padding: 12px 15px; border-radius: 12px; border: none;
+            background: #E5E5EA; font-size: 1rem; box-sizing: border-box; outline: none;
+        }
+
+        .list-container { margin-top: 10px; }
+        .item-card {
+            background: var(--card-bg); border-radius: 12px; padding: 15px;
+            margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .item-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px; }
+        .name { font-size: 1.2rem; font-weight: bold; color: #000; }
+        .ruby { font-size: 0.85rem; color: #8E8E93; }
+
+        .meta-info { font-size: 0.9rem; color: var(--main-blue); font-weight: 500; margin-bottom: 8px; }
+        
+        .detail-row { font-size: 0.9rem; line-height: 1.5; margin-bottom: 5px; color: #3A3A3C; }
+        .label { font-weight: bold; color: #8E8E93; min-width: 50px; display: inline-block; }
+
+        /* 属性チップ */
+        .tags { margin-top: 8px; display: flex; gap: 5px; flex-wrap: wrap; }
+        .tag {
+            font-size: 0.7rem; font-weight: bold; color: #FFF;
+            padding: 2px 8px; border-radius: 6px; display: inline-block;
+        }
+        .bo { background: var(--tag-bo); }
+        .gen { background: var(--tag-gen); }
+        .geki { background: var(--tag-geki); }
+        .raku { background: var(--tag-raku); }
+        .other { background: #8E8E93; }
+
+        .count-info { text-align: right; font-size: 0.8rem; color: #8E8E93; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>📍 経穴マスター Pro 辞典</h1>
+        <input type="text" id="search-box" placeholder="経穴名、経絡、部位で検索..." oninput="updateList()">
+    </div>
+
+    <div class="count-info" id="count-display">読み込み中...</div>
+
+    <div id="list-container" class="list-container"></div>
+
+<script>
+let masterData = [];
+
+window.onload = async function() {
+    try {
+        const res = await fetch('data1.csv?v=' + Date.now());
+        const text = await res.text();
+        masterData = parseCSV(text);
+        updateList();
+    } catch (e) {
+        document.getElementById('count-display').innerText = "データの読み込みに失敗しました。";
+    }
+};
+
+function parseCSV(text) {
+    const lines = text.trim().split(/\r?\n/);
+    const delimiter = lines[0].includes('\t') ? '\t' : ',';
+    const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
+    
+    return lines.slice(1).map(line => {
+        const regex = delimiter === ',' ? /,(?=(?:(?:[^"]*"){2})*[^"]*$)/ : delimiter;
+        const values = line.split(regex);
+        let obj = {};
+        headers.forEach((h, i) => {
+            obj[h] = (values[i] || "").trim().replace(/^"|"$/g, '').replace(/""/g, '"');
+        });
+        return obj;
+    }).filter(i => i.経穴名);
+}
+
+function createTags(memo) {
+    if (!memo) return "";
+    let html = '<div class="tags">';
+    if (memo.includes("募穴")) html += '<span class="tag bo">募穴</span>';
+    if (memo.includes("原穴")) html += '<span class="tag gen">原穴</span>';
+    if (memo.includes("郄穴")) html += '<span class="tag geki">郄穴</span>';
+    if (memo.includes("絡穴")) html += '<span class="tag raku">絡穴</span>';
+    if (memo.includes("八会穴")) html += '<span class="tag other">八会穴</span>';
+    if (memo.includes("八脈交会穴")) html += '<span class="tag other">八脈交会穴</span>';
+    html += '</div>';
+    return html === '<div class="tags"></div>' ? "" : html;
+}
+
+function updateList() {
+    const word = document.getElementById('search-box').value.toLowerCase();
+    const container = document.getElementById('list-container');
+    
+    const filtered = masterData.filter(i => 
+        i.経穴名.includes(word) || i.読み.includes(word) || i.所属経絡.includes(word) || i.部位.includes(word)
+    );
+
+    document.getElementById('count-display').innerText = `該当: ${filtered.length} 件`;
+
+    container.innerHTML = filtered.map(i => `
+        <div class="item-card">
+            <div class="item-header">
+                <span class="name">${i.経穴名}</span>
+                <span class="ruby">${i.読み}</span>
+            </div>
+            <div class="meta-info">${i.所属経絡}</div>
+            <div class="detail-row"><span class="label">部位</span>${i.部位}</div>
+            <div class="detail-row"><span class="label">取穴</span>${i['取穴法（指標）']}</div>
+            <div class="detail-row"><span class="label">解剖</span>${i.解剖}</div>
+            ${i['備考（属性タグ・別説含む）'] ? `<div class="detail-row"><span class="label">備考</span>${i['備考（属性タグ・別説含む）']}</div>` : ''}
+            ${createTags(i['備考（属性タグ・別説含む）'])}
+        </div>
+    `).join('');
+}
+</script>
+</body>
+</html>
+
