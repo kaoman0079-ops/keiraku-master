@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>経絡マスター Pro</title>
+    <title>経絡マスター Pro - Level System</title>
     <style>
         :root { --main-blue: #3498db; --bg-color: #f0f2f5; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-color); padding: 20px; max-width: 800px; margin: 0 auto; color: #333; }
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         h1 { text-align: center; color: #2c3e50; font-size: 1.5rem; margin-top: 0; }
+        .level-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .level-btn { padding: 8px 15px; border: 2px solid #ddd; border-radius: 20px; background: white; cursor: pointer; font-size: 0.9rem; }
+        .level-btn.active { background: var(--main-blue); color: white; border-color: var(--main-blue); }
         .quiz-info { color: #7f8c8d; margin-bottom: 15px; text-align: center; font-size: 0.9rem; }
         .question { font-size: 1.3rem; font-weight: bold; margin-bottom: 20px; text-align: center; line-height: 1.4; }
         .option-btn { 
@@ -32,6 +35,13 @@
 
     <div class="card">
         <h1>📍 経絡マスター Pro</h1>
+        
+        <div class="level-selector" id="level-selector">
+            <button class="level-btn active" onclick="setLevel(1)">Lv.1 基礎</button>
+            <button class="level-btn" onclick="setLevel(2)">Lv.2 経絡</button>
+            <button class="level-btn" onclick="setLevel(3)">Lv.3 部位</button>
+        </div>
+
         <div id="loader" class="status">データを読み込み中...</div>
         
         <div id="quiz-area" style="display:none;">
@@ -45,37 +55,37 @@
 
 <script>
 let masterData = [];
-let quizSet = [];
-let currentIndex = 0;
+let quizQueue = [];
+let totalSolved = 0;
+let currentLevel = 1;
 
-// 1. データの読み込み
 window.onload = async function() {
     try {
-        // キャッシュ対策でURLに時間を付与
         const response = await fetch('data1.csv?v=' + new Date().getTime());
         const csvText = await response.text();
         masterData = parseCSV(csvText);
-        
-        if (masterData.length > 0) {
-            startQuiz();
-        } else {
-            throw new Error('No data');
-        }
+        if (masterData.length > 0) startQuiz();
     } catch (e) {
-        document.getElementById('loader').innerHTML = "⚠️ データの読み込みに失敗しました。<br>data1.csvが正しく設置されているか確認してください。";
+        document.getElementById('loader').innerHTML = "⚠️ データの読み込みに失敗しました。";
     }
 };
 
-// 2. CSVパース（カンマ/タブ自動判別）
+function setLevel(lv) {
+    currentLevel = lv;
+    document.querySelectorAll('.level-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i + 1 === lv);
+    });
+    totalSolved = 0;
+    refreshQueue();
+    showQuestion();
+}
+
 function parseCSV(text) {
     const lines = text.trim().split(/\r?\n/);
     if (lines.length < 2) return [];
-
     const delimiter = lines[0].includes('\t') ? '\t' : ',';
     const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
-
     return lines.slice(1).map(line => {
-        // 引用符を考慮した分割
         const regex = delimiter === ',' ? /,(?=(?:(?:[^"]*"){2})*[^"]*$)/ : delimiter;
         const values = line.split(regex);
         let obj = {};
@@ -84,32 +94,50 @@ function parseCSV(text) {
             obj[h] = val;
         });
         return obj;
-    }).filter(item => item['経穴名']); // 空行を除外
+    }).filter(item => item['経穴名']);
 }
 
-// 3. クイズ開始
 function startQuiz() {
-    // 全データからランダムに10問抽出
-    quizSet = [...masterData].sort(() => Math.random() - 0.5).slice(0, 10);
+    refreshQueue();
     document.getElementById('loader').style.display = 'none';
     document.getElementById('quiz-area').style.display = 'block';
     showQuestion();
 }
 
-// 4. 問題表示
+function refreshQueue() {
+    quizQueue = [...masterData].sort(() => Math.random() - 0.5);
+}
+
 function showQuestion() {
-    const q = quizSet[currentIndex];
-    document.getElementById('quiz-progress').innerText = `第 ${currentIndex + 1} 問 / 全 10 問 [${q['所属経絡'] || '経絡不明'}]`;
+    if (quizQueue.length === 0) refreshQueue();
+    const q = quizQueue[0];
+    totalSolved++;
+    
+    document.getElementById('quiz-progress').innerText = `Lv.${currentLevel} - 第 ${totalSolved} 問目`;
     document.getElementById('question-text').innerText = `${q['経穴名']} (${q['読み']}) の部位は？`;
     
     const container = document.getElementById('options-container');
     container.innerHTML = '';
 
-    // 正解と不正解を混ぜる
+    // レベルに応じた選択肢生成
     let options = [q['部位']];
+    let pool = [];
+
+    if (currentLevel === 1) {
+        pool = masterData;
+    } else if (currentLevel === 2) {
+        // 同じ経絡のデータから選ぶ
+        pool = masterData.filter(item => item['所属経絡'] === q['所属経絡']);
+        if (pool.length < 4) pool = masterData; // 足りない場合は全データ
+    } else if (currentLevel === 3) {
+        // 部位の最初の2文字が一致するデータから選ぶ（例：側頭、顔面、下腿）
+        const areaPrefix = q['部位'].substring(0, 2);
+        pool = masterData.filter(item => item['部位'].startsWith(areaPrefix));
+        if (pool.length < 4) pool = masterData;
+    }
+
     while(options.length < 4) {
-        let randomItem = masterData[Math.floor(Math.random() * masterData.length)];
-        let randomVal = randomItem['部位'];
+        let randomVal = pool[Math.floor(Math.random() * pool.length)]['部位'];
         if(randomVal && !options.includes(randomVal)) options.push(randomVal);
     }
     options.sort(() => Math.random() - 0.5);
@@ -126,19 +154,16 @@ function showQuestion() {
     document.getElementById('next-btn').style.display = 'none';
 }
 
-// 5. 回答チェック
 function checkAnswer(selected, btn, correct) {
     const btns = document.querySelectorAll('.option-btn');
     btns.forEach(b => b.disabled = true);
-
     if(selected === correct) {
         btn.classList.add('correct');
     } else {
         btn.classList.add('wrong');
         btns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
     }
-
-    const q = quizSet[currentIndex];
+    const q = quizQueue[0];
     const exp = document.getElementById('explanation-box');
     exp.style.display = 'block';
     exp.innerHTML = `<strong>【正解：${q['経穴名']}】</strong><br>` +
@@ -146,19 +171,12 @@ function checkAnswer(selected, btn, correct) {
                     `🔍 取穴法：${q['取穴法（指標）'] || 'なし'}<br>` +
                     `🦴 解剖：${q['解剖'] || 'なし'}<br>` +
                     `📝 備考：${q['備考（属性タグ・別説含む）'] || 'なし'}`;
-    
     document.getElementById('next-btn').style.display = 'block';
 }
 
-// 6. 次へ
 function nextQuestion() {
-    currentIndex++;
-    if(currentIndex < quizSet.length) {
-        showQuestion();
-    } else {
-        alert("10問終了！お疲れ様でした。");
-        location.reload();
-    }
+    quizQueue.shift();
+    showQuestion();
 }
 </script>
 </body>
