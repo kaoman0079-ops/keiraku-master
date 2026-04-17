@@ -29,6 +29,8 @@
         }
         .explanation { display: none; margin-top: 20px; padding: 15px; background: #fff9db; border-radius: 10px; font-size: 0.95rem; line-height: 1.6; border-left: 5px solid #f1c40f; }
         .status { text-align: center; color: #7f8c8d; }
+        /* 経絡名を見やすくするための強調 */
+        .keiraku-tag { display: inline-block; background: #2c3e50; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -119,18 +121,15 @@ function showQuestion() {
     const container = document.getElementById('options-container');
     container.innerHTML = '';
 
-    // レベルに応じた選択肢生成
     let options = [q['部位']];
     let pool = [];
 
     if (currentLevel === 1) {
         pool = masterData;
     } else if (currentLevel === 2) {
-        // 同じ経絡のデータから選ぶ
         pool = masterData.filter(item => item['所属経絡'] === q['所属経絡']);
-        if (pool.length < 4) pool = masterData; // 足りない場合は全データ
+        if (pool.length < 4) pool = masterData;
     } else if (currentLevel === 3) {
-        // 部位の最初の2文字が一致するデータから選ぶ（例：側頭、顔面、下腿）
         const areaPrefix = q['部位'].substring(0, 2);
         pool = masterData.filter(item => item['部位'].startsWith(areaPrefix));
         if (pool.length < 4) pool = masterData;
@@ -163,10 +162,13 @@ function checkAnswer(selected, btn, correct) {
         btn.classList.add('wrong');
         btns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
     }
+
     const q = quizQueue[0];
     const exp = document.getElementById('explanation-box');
     exp.style.display = 'block';
-    exp.innerHTML = `<strong>【正解：${q['経穴名']}】</strong><br>` +
+    // 解説欄の「部位」の上に「所属経絡」を表示するように変更
+    exp.innerHTML = `<div class="keiraku-tag">${q['所属経絡']}</div><br>` +
+                    `<strong>【正解：${q['経穴名']}】</strong><br>` +
                     `📍 部位：${q['部位']}<br>` +
                     `🔍 取穴法：${q['取穴法（指標）'] || 'なし'}<br>` +
                     `🦴 解剖：${q['解剖'] || 'なし'}<br>` +
