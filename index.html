@@ -9,10 +9,10 @@
             --main-blue: #007AFF;
             --bg-light: #F2F2F7;
             --card-bg: #FFFFFF;
-            --tag-bo: #FF9500;   /* 募穴: オレンジ */
-            --tag-gen: #5856D6;  /* 原穴: 紫 */
-            --tag-geki: #FF3B30; /* 郄穴: 赤 */
-            --tag-raku: #34C759; /* 絡穴: 緑 */
+            --tag-bo: #FF9500;   /* 募穴 */
+            --tag-gen: #5856D6;  /* 原穴 */
+            --tag-geki: #FF3B30; /* 郄穴 */
+            --tag-raku: #34C759; /* 絡穴 */
         }
         body { font-family: -apple-system, sans-serif; background: var(--bg-light); margin: 0; padding: env(safe-area-inset-top) 15px; color: #1C1C1E; }
         
@@ -21,8 +21,22 @@
         
         #search-box {
             width: 100%; padding: 12px 15px; border-radius: 12px; border: none;
-            background: #E5E5EA; font-size: 1rem; box-sizing: border-box; outline: none;
+            background: #E5E5EA; font-size: 1rem; box-sizing: border-box; outline: none; margin-bottom: 10px;
         }
+
+        /* 経絡フィルターエリア */
+        .filter-container {
+            display: flex; overflow-x: auto; gap: 8px; padding-bottom: 10px;
+            -webkit-overflow-scrolling: touch; /* iOS用スムーズスクロール */
+        }
+        .filter-container::-webkit-scrollbar { display: none; } /* スクロールバー非表示 */
+        
+        .filter-btn {
+            white-space: nowrap; padding: 6px 14px; border-radius: 15px;
+            background: #E5E5EA; border: none; font-size: 0.85rem; cursor: pointer;
+            transition: 0.2s; color: #3A3A3C;
+        }
+        .filter-btn.active { background: var(--main-blue); color: #FFF; font-weight: bold; }
 
         .list-container { margin-top: 10px; }
         .item-card {
@@ -39,7 +53,6 @@
         .detail-row { font-size: 0.9rem; line-height: 1.5; margin-bottom: 5px; color: #3A3A3C; }
         .label { font-weight: bold; color: #8E8E93; min-width: 50px; display: inline-block; }
 
-        /* 属性チップ */
         .tags { margin-top: 8px; display: flex; gap: 5px; flex-wrap: wrap; }
         .tag {
             font-size: 0.7rem; font-weight: bold; color: #FFF;
@@ -58,7 +71,11 @@
 
     <div class="header">
         <h1>📍 経穴マスター Pro 辞典</h1>
-        <input type="text" id="search-box" placeholder="経穴名、経絡、部位で検索..." oninput="updateList()">
+        <input type="text" id="search-box" placeholder="経穴名、部位、備考などで検索..." oninput="updateList()">
+        
+        <div class="filter-container" id="filter-area">
+            <button class="filter-btn active" onclick="setFilter('すべて')">すべて</button>
+            </div>
     </div>
 
     <div class="count-info" id="count-display">読み込み中...</div>
@@ -67,17 +84,44 @@
 
 <script>
 let masterData = [];
+let currentFilter = "すべて";
 
 window.onload = async function() {
     try {
         const res = await fetch('data1.csv?v=' + Date.now());
         const text = await res.text();
         masterData = parseCSV(text);
+        
+        initFilterButtons(); // 経絡ボタンを生成
         updateList();
     } catch (e) {
         document.getElementById('count-display').innerText = "データの読み込みに失敗しました。";
     }
 };
+
+// 重複のない所属経絡リストを作成してボタンを配置
+function initFilterButtons() {
+    const filterArea = document.getElementById('filter-area');
+    // データから全経絡名を抽出してユニークなリストにする
+    const channels = [...new Set(masterData.map(i => i.所属経絡))].filter(Boolean);
+    
+    channels.forEach(ch => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn';
+        btn.innerText = ch;
+        btn.onclick = () => setFilter(ch);
+        filterArea.appendChild(btn);
+    });
+}
+
+function setFilter(ch) {
+    currentFilter = ch;
+    // ボタンの見た目を更新
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText === ch);
+    });
+    updateList();
+}
 
 function parseCSV(text) {
     const lines = text.trim().split(/\r?\n/);
@@ -112,9 +156,14 @@ function updateList() {
     const word = document.getElementById('search-box').value.toLowerCase();
     const container = document.getElementById('list-container');
     
-    const filtered = masterData.filter(i => 
-        i.経穴名.includes(word) || i.読み.includes(word) || i.所属経絡.includes(word) || i.部位.includes(word)
-    );
+    const filtered = masterData.filter(i => {
+        // 経絡フィルターの条件
+        const matchFilter = (currentFilter === "すべて" || i.所属経絡 === currentFilter);
+        // 検索窓の条件
+        const matchWord = (i.経穴名.includes(word) || i.読み.includes(word) || i.部位.includes(word) || i['備考（属性タグ・別説含む）'].includes(word));
+        
+        return matchFilter && matchWord;
+    });
 
     document.getElementById('count-display').innerText = `該当: ${filtered.length} 件`;
 
@@ -136,4 +185,3 @@ function updateList() {
 </script>
 </body>
 </html>
-
