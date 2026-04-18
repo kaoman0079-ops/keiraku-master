@@ -16,7 +16,6 @@
         }
         body { font-family: -apple-system, sans-serif; background: var(--bg-light); margin: 0; padding: env(safe-area-inset-top) 15px; color: #1C1C1E; }
         
-        /* ヘッダー固定 */
         .header { position: sticky; top: 0; background: var(--bg-light); padding: 10px 0; z-index: 100; border-bottom: 1px solid #D1D1D6; }
         h1 { font-size: 1.1rem; margin: 0 0 10px; text-align: center; }
         
@@ -25,12 +24,8 @@
             flex: 1; padding: 10px 15px; border-radius: 10px; border: 1px solid #C6C6C8;
             background: #FFF; font-size: 1rem; outline: none;
         }
-        /* メニューを開くボタン */
-        .menu-toggle-btn {
-            padding: 10px; border-radius: 10px; background: var(--main-blue); color: #FFF; border: none; font-size: 0.8rem; font-weight: bold; cursor: pointer;
-        }
 
-        /* 経絡選択エリア（開閉式） */
+        /* 経絡選択エリア（グリッド） */
         .filter-section {
             background: #E5E5EA; border-radius: 12px; padding: 10px; margin-top: 10px;
             display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
@@ -39,13 +34,20 @@
 
         .filter-btn {
             padding: 12px 5px; border-radius: 8px; background: #FFF; border: none;
-            font-size: 0.75rem; cursor: pointer; transition: 0.2s; color: #3A3A3C; text-align: center;
+            font-size: 0.75rem; cursor: pointer; color: #3A3A3C; text-align: center; font-weight: 500;
         }
         .filter-btn.all { grid-column: span 2; background: #8E8E93; color: #FFF; font-weight: bold; }
         .filter-btn.active { background: var(--main-blue); color: #FFF; }
 
-        /* リストエリア */
-        .list-container { margin-top: 15px; }
+        /* 「選び直す」ボタン：リスト表示中に出現 */
+        .reselect-area { margin-top: 10px; display: none; }
+        .reselect-area.visible { display: block; }
+        .reselect-btn {
+            width: 100%; padding: 12px; border-radius: 10px; background: #E5E5EA;
+            color: var(--main-blue); border: 2px solid var(--main-blue); font-size: 0.9rem; font-weight: bold; cursor: pointer;
+        }
+
+        .list-container { margin-top: 10px; }
         .item-card {
             background: var(--card-bg); border-radius: 12px; padding: 15px;
             margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -74,7 +76,6 @@
         <h1>📍 経穴マスター Pro 辞典</h1>
         <div class="controls">
             <input type="text" id="search-box" placeholder="キーワード検索..." oninput="onSearchInput()">
-            <button class="menu-toggle-btn" id="toggle-menu" onclick="toggleMenu()">経絡選択</button>
         </div>
 
         <div class="filter-section" id="filter-area">
@@ -96,6 +97,10 @@
         </div>
     </div>
 
+    <div class="reselect-area" id="reselect-area">
+        <button class="reselect-btn" onclick="showMenu()">経絡を選び直す（メニュー表示）</button>
+    </div>
+
     <div id="count-display" class="count-info"></div>
     <div id="list-container" class="list-container"></div>
 
@@ -114,25 +119,31 @@ window.onload = async function() {
     }
 };
 
-function toggleMenu() {
-    const area = document.getElementById('filter-area');
-    area.classList.toggle('hidden');
+// メニューを再表示する
+function showMenu() {
+    document.getElementById('filter-area').classList.remove('hidden');
+    document.getElementById('reselect-area').classList.remove('visible');
+    // リストを一度クリアしてガイドに戻す（お好みで）
+    currentFilter = "";
+    document.getElementById('search-box').value = "";
+    updateList();
 }
 
 function onSearchInput() {
-    // 検索し始めたらメニューを閉じる
-    document.getElementById('filter-area').classList.add('hidden');
+    const word = document.getElementById('search-box').value;
+    if (word.length > 0) {
+        document.getElementById('filter-area').classList.add('hidden');
+        document.getElementById('reselect-area').classList.add('visible');
+    }
     updateList();
 }
 
 function setFilter(ch) {
     currentFilter = ch;
-    // 選択したらメニューを閉じる
+    // 選択したらメニューを隠し、選び直しボタンを出す
     document.getElementById('filter-area').classList.add('hidden');
+    document.getElementById('reselect-area').classList.add('visible');
     
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.innerText === ch || (ch === 'すべて' && btn.innerText === 'すべて表示'));
-    });
     updateList();
 }
 
@@ -168,8 +179,9 @@ function updateList() {
     const container = document.getElementById('list-container');
     
     if (!currentFilter && !word) {
-        container.innerHTML = '<div class="guide-msg">「経絡選択」ボタンから選ぶか<br>キーワードを入力してください</div>';
+        container.innerHTML = '<div class="guide-msg">上のメニューから経絡を選択するか<br>キーワードを入力してください</div>';
         document.getElementById('count-display').innerText = "";
+        document.getElementById('reselect-area').classList.remove('visible'); // 何もない時は選び直しも不要
         return;
     }
 
