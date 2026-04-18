@@ -16,16 +16,16 @@
         }
         body { font-family: -apple-system, sans-serif; background: var(--bg-light); margin: 0; padding: 0 15px; color: #1C1C1E; }
         
-        /* ヘッダー全体を固定 */
+        /* ヘッダー全体をsticky固定 */
         .header { 
             position: sticky; 
             top: 0; 
             background: var(--bg-light); 
             padding: 10px 0; 
-            z-index: 100; 
+            z-index: 1000; 
             border-bottom: 1px solid #D1D1D6; 
         }
-        h1 { font-size: 1.1rem; margin: 0 0 10px; text-align: center; }
+        h1 { font-size: 1.1rem; margin: 0 0 10px; text-align: center; color: #000; }
         
         .controls { display: flex; flex-direction: column; gap: 8px; }
         #search-box {
@@ -33,7 +33,7 @@
             background: #FFF; font-size: 1rem; outline: none; box-sizing: border-box;
         }
 
-        /* 経絡選択グリッド */
+        /* 経絡選択グリッド：2列 */
         .filter-section {
             background: #E5E5EA; border-radius: 12px; padding: 10px; margin-top: 10px;
             display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
@@ -41,24 +41,24 @@
         .filter-section.hidden { display: none; }
 
         .filter-btn {
-            padding: 12px 5px; border-radius: 8px; background: #FFF; border: none;
-            font-size: 0.75rem; cursor: pointer; color: #3A3A3C; text-align: center; font-weight: 500;
+            padding: 12px 4px; border-radius: 8px; background: #FFF; border: none;
+            font-size: 0.7rem; cursor: pointer; color: #3A3A3C; text-align: center; font-weight: 500;
+            line-height: 1.2;
         }
-        .filter-btn.all { grid-column: span 2; background: #8E8E93; color: #FFF; font-weight: bold; }
+        .filter-btn.all { grid-column: span 2; background: #8E8E93; color: #FFF; font-weight: bold; font-size: 0.8rem; }
         .filter-btn.active { background: var(--main-blue); color: #FFF; }
 
-        /* 「選び直す」ボタン：ヘッダー内で固定表示 */
+        /* 「選び直し」ボタン：ヘッダー内で検索窓の下に固定 */
         .reselect-area { display: none; margin-top: 5px; }
         .reselect-area.visible { display: block; }
         .reselect-btn {
             width: 100%; padding: 8px; border-radius: 8px; background: #FFF;
             color: var(--main-blue); border: 1.5px solid var(--main-blue); 
-            font-size: 0.85rem; font-weight: bold; cursor: pointer;
-            transition: 0.2s;
+            font-size: 0.8rem; font-weight: bold; cursor: pointer;
         }
-        .reselect-btn:active { background: #E5F2FF; }
 
-        .list-container { margin-top: 15px; padding-bottom: 50px; }
+        /* リスト表示エリア */
+        .list-container { margin-top: 15px; padding-bottom: env(safe-area-inset-bottom); }
         .item-card {
             background: var(--card-bg); border-radius: 12px; padding: 15px;
             margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -69,6 +69,7 @@
         .meta-info { font-size: 0.85rem; color: var(--main-blue); font-weight: 600; margin-bottom: 8px; }
         .detail-row { font-size: 0.85rem; line-height: 1.4; margin-bottom: 4px; color: #3A3A3C; }
         .label { font-weight: bold; color: #8E8E93; min-width: 45px; display: inline-block; }
+
         .tags { margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
         .tag { font-size: 0.65rem; font-weight: bold; color: #FFF; padding: 2px 6px; border-radius: 4px; }
         .bo { background: var(--tag-bo); }
@@ -77,8 +78,8 @@
         .raku { background: var(--tag-raku); }
         .other { background: #8E8E93; }
 
-        .count-info { text-align: center; font-size: 0.8rem; color: #8E8E93; margin-top: 10px; }
-        .guide-msg { text-align: center; color: #8E8E93; margin-top: 60px; font-size: 0.9rem; }
+        .count-info { text-align: center; font-size: 0.8rem; color: #8E8E93; margin-top: 8px; height: 1.2em; }
+        .guide-msg { text-align: center; color: #8E8E93; margin-top: 60px; font-size: 0.9rem; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -97,18 +98,18 @@
             <button class="filter-btn all" onclick="setFilter('すべて')">すべて表示</button>
             <button class="filter-btn" onclick="setFilter('督脈')">督脈</button>
             <button class="filter-btn" onclick="setFilter('任脈')">任脈</button>
-            <button class="filter-btn" onclick="setFilter('手の太陰肺経')">肺経</button>
-            <button class="filter-btn" onclick="setFilter('手の陽明大腸経')">大腸経</button>
-            <button class="filter-btn" onclick="setFilter('足の陽明胃経')">胃経</button>
-            <button class="filter-btn" onclick="setFilter('足の太陰脾経')">脾経</button>
-            <button class="filter-btn" onclick="setFilter('手の少陰心経')">心経</button>
-            <button class="filter-btn" onclick="setFilter('手の太陽小腸経')">小腸経</button>
-            <button class="filter-btn" onclick="setFilter('足の太陽膀胱経')">膀胱経</button>
-            <button class="filter-btn" onclick="setFilter('足の少陰腎経')">腎経</button>
-            <button class="filter-btn" onclick="setFilter('手の厥陰心包経')">心包経</button>
-            <button class="filter-btn" onclick="setFilter('手の少陽三焦経')">三焦経</button>
-            <button class="filter-btn" onclick="setFilter('足の少陽胆経')">胆経</button>
-            <button class="filter-btn" onclick="setFilter('足の厥陰肝経')">肝経</button>
+            <button class="filter-btn" onclick="setFilter('手の太陰肺経')">手の太陰肺経</button>
+            <button class="filter-btn" onclick="setFilter('手の陽明大腸経')">手の陽明大腸経</button>
+            <button class="filter-btn" onclick="setFilter('足の陽明胃経')">足の陽明胃経</button>
+            <button class="filter-btn" onclick="setFilter('足の太陰脾経')">足の太陰脾経</button>
+            <button class="filter-btn" onclick="setFilter('手の少陰心経')">手の少陰心経</button>
+            <button class="filter-btn" onclick="setFilter('手の太陽小腸経')">手の太陽小腸経</button>
+            <button class="filter-btn" onclick="setFilter('足の太陽膀胱経')">足の太陽膀胱経</button>
+            <button class="filter-btn" onclick="setFilter('足の少陰腎経')">足の少陰腎経</button>
+            <button class="filter-btn" onclick="setFilter('手の厥陰心包経')">手の厥陰心包経</button>
+            <button class="filter-btn" onclick="setFilter('手の少陽三焦経')">手の少陽三焦経</button>
+            <button class="filter-btn" onclick="setFilter('足の少陽胆経')">足の少陽胆経</button>
+            <button class="filter-btn" onclick="setFilter('足の厥陰肝経')">足の厥陰肝経</button>
         </div>
     </div>
 
@@ -136,6 +137,7 @@ function showMenu() {
     currentFilter = "";
     document.getElementById('search-box').value = "";
     updateList();
+    window.scrollTo(0, 0); // メニュー表示時に上に戻す
 }
 
 function onSearchInput() {
@@ -152,6 +154,7 @@ function setFilter(ch) {
     document.getElementById('filter-area').classList.add('hidden');
     document.getElementById('reselect-area').classList.add('visible');
     updateList();
+    window.scrollTo(0, 0);
 }
 
 function parseCSV(text) {
@@ -186,15 +189,14 @@ function updateList() {
     const container = document.getElementById('list-container');
     
     if (!currentFilter && !word) {
-        container.innerHTML = '<div class="guide-msg">上のメニューから経絡を選択するか<br>キーワードを入力してください</div>';
+        container.innerHTML = '<div class="guide-msg">経絡を選択するか<br>キーワードを入力してください</div>';
         document.getElementById('count-display').innerText = "";
         document.getElementById('reselect-area').classList.remove('visible');
         return;
     }
 
     const filtered = masterData.filter(i => {
-        let shortName = currentFilter.replace('経', '');
-        const matchFilter = (!currentFilter || currentFilter === "すべて" || i.所属経絡.includes(shortName));
+        const matchFilter = (!currentFilter || currentFilter === "すべて" || i.所属経絡 === currentFilter);
         const matchWord = (!word || i.経穴名.includes(word) || i.読み.includes(word) || i.部位.includes(word) || i['備考（属性タグ・別説含む）'].includes(word));
         return matchFilter && matchWord;
     });
