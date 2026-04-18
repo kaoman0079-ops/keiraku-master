@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>経穴マスター Pro - 辞典</title>
+    <title>経穴マスター Pro 辞典</title>
     <style>
         :root {
             --main-blue: #007AFF;
@@ -16,119 +16,112 @@
         }
         body { font-family: -apple-system, sans-serif; background: var(--bg-light); margin: 0; padding: env(safe-area-inset-top) 15px; color: #1C1C1E; }
         
-        .header { position: sticky; top: 0; background: var(--bg-light); padding: 15px 0 10px; z-index: 100; border-bottom: 1px solid #D1D1D6; margin-bottom: 15px; }
-        h1 { font-size: 1.4rem; margin: 0 0 15px; text-align: center; color: #000; }
+        .header { position: sticky; top: 0; background: var(--bg-light); padding: 15px 0 10px; z-index: 100; border-bottom: 1px solid #D1D1D6; margin-bottom: 10px; }
+        h1 { font-size: 1.2rem; margin: 0 0 10px; text-align: center; color: #000; }
         
         #search-box {
-            width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid #C6C6C8;
-            background: #FFF; font-size: 1rem; box-sizing: border-box; outline: none; margin-bottom: 15px;
+            width: 100%; padding: 10px 15px; border-radius: 10px; border: 1px solid #C6C6C8;
+            background: #FFF; font-size: 1rem; box-sizing: border-box; outline: none; margin-bottom: 10px;
         }
 
-        /* 経絡ボタンのグリッド配置 */
+        /* 経絡グリッド：2列ペア */
         .filter-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-bottom: 10px;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 5px;
         }
         .filter-btn {
-            padding: 10px 5px; border-radius: 10px;
-            background: #E5E5EA; border: none; font-size: 0.8rem; cursor: pointer;
-            transition: 0.2s; color: #3A3A3C; text-align: center;
+            padding: 12px 5px; border-radius: 8px;
+            background: #E5E5EA; border: none; font-size: 0.75rem; cursor: pointer;
+            transition: 0.2s; color: #3A3A3C; text-align: center; font-weight: 500;
         }
-        /* 「すべて」ボタンだけ1行ぶち抜き */
         .filter-btn.all { grid-column: span 2; background: #8E8E93; color: #FFF; font-weight: bold; }
         .filter-btn.active { background: var(--main-blue); color: #FFF; font-weight: bold; }
 
-        .list-container { margin-top: 10px; }
+        .list-container { margin-top: 15px; min-height: 200px; }
         .item-card {
             background: var(--card-bg); border-radius: 12px; padding: 15px;
             margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .item-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px; }
-        .name { font-size: 1.2rem; font-weight: bold; color: #000; }
-        .ruby { font-size: 0.85rem; color: #8E8E93; }
+        .name { font-size: 1.1rem; font-weight: bold; color: #000; }
+        .ruby { font-size: 0.8rem; color: #8E8E93; }
 
-        .meta-info { font-size: 0.9rem; color: var(--main-blue); font-weight: 500; margin-bottom: 8px; }
-        .detail-row { font-size: 0.9rem; line-height: 1.5; margin-bottom: 5px; color: #3A3A3C; }
-        .label { font-weight: bold; color: #8E8E93; min-width: 50px; display: inline-block; }
+        .meta-info { font-size: 0.85rem; color: var(--main-blue); font-weight: 600; margin-bottom: 8px; }
+        .detail-row { font-size: 0.85rem; line-height: 1.4; margin-bottom: 4px; color: #3A3A3C; }
+        .label { font-weight: bold; color: #8E8E93; min-width: 45px; display: inline-block; }
 
-        .tags { margin-top: 8px; display: flex; gap: 5px; flex-wrap: wrap; }
-        .tag { font-size: 0.7rem; font-weight: bold; color: #FFF; padding: 2px 8px; border-radius: 6px; display: inline-block; }
+        .tags { margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
+        .tag { font-size: 0.65rem; font-weight: bold; color: #FFF; padding: 2px 6px; border-radius: 4px; display: inline-block; }
         .bo { background: var(--tag-bo); }
         .gen { background: var(--tag-gen); }
         .geki { background: var(--tag-geki); }
         .raku { background: var(--tag-raku); }
         .other { background: #8E8E93; }
 
-        .count-info { text-align: right; font-size: 0.8rem; color: #8E8E93; margin-bottom: 10px; height: 1.2em; }
-        .guide-msg { text-align: center; color: #8E8E93; margin-top: 50px; font-size: 0.9rem; }
+        .count-info { text-align: center; font-size: 0.8rem; color: #8E8E93; margin: 10px 0; height: 1.2em; }
+        .guide-msg { text-align: center; color: #8E8E93; margin-top: 60px; font-size: 0.9rem; line-height: 1.6; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>📍 経穴マスター Pro 辞典</h1>
-        <input type="text" id="search-box" placeholder="キーワード検索..." oninput="updateList()">
+        <input type="text" id="search-box" placeholder="キーワードで検索..." oninput="updateList()">
         
         <div class="filter-grid" id="filter-area">
             <button class="filter-btn all" id="btn-all" onclick="setFilter('すべて')">すべて表示</button>
-            </div>
+            <button class="filter-btn" onclick="setFilter('督脈')">督脈</button>
+            <button class="filter-btn" onclick="setFilter('任脈')">任脈</button>
+            <button class="filter-btn" onclick="setFilter('手の太陰肺経')">肺経</button>
+            <button class="filter-btn" onclick="setFilter('手の陽明大腸経')">大腸経</button>
+            <button class="filter-btn" onclick="setFilter('足の陽明胃経')">胃経</button>
+            <button class="filter-btn" onclick="setFilter('足の太陰脾経')">脾経</button>
+            <button class="filter-btn" onclick="setFilter('手の少陰心経')">心経</button>
+            <button class="filter-btn" onclick="setFilter('手の太陽小腸経')">小腸経</button>
+            <button class="filter-btn" onclick="setFilter('足の太陽膀胱経')">膀胱経</button>
+            <button class="filter-btn" onclick="setFilter('足の少陰腎経')">腎経</button>
+            <button class="filter-btn" onclick="setFilter('手の厥陰心包経')">心包経</button>
+            <button class="filter-btn" onclick="setFilter('手の少陽三焦経')">三焦経</button>
+            <button class="filter-btn" onclick="setFilter('足の少陽胆経')">胆経</button>
+            <button class="filter-btn" onclick="setFilter('足の厥陰肝経')">肝経</button>
+        </div>
     </div>
 
-    <div class="count-info" id="count-display"></div>
-
+    <div id="count-display" class="count-info">データを読み込み中...</div>
     <div id="list-container" class="list-container"></div>
 
 <script>
 let masterData = [];
-let currentFilter = ""; // 初期状態は空
+let currentFilter = ""; 
 
 window.onload = async function() {
     try {
         const res = await fetch('data1.csv?v=' + Date.now());
+        if(!res.ok) throw new Error();
         const text = await res.text();
         masterData = parseCSV(text);
-        initFilterButtons();
+        document.getElementById('count-display').innerText = "";
         updateList();
     } catch (e) {
-        document.getElementById('count-display').innerText = "データの読み込みに失敗しました。";
+        document.getElementById('count-display').innerText = "⚠️ CSVの読み込みに失敗しました";
     }
 };
 
-function initFilterButtons() {
-    const filterArea = document.getElementById('filter-area');
-    // 教科書の並び順を意識した固定配列（データにあるものだけ表示）
-    const order = ["督脈", "任脈", "手の太陰肺経", "手の陽明大腸経", "足の陽明胃経", "足の太陰脾経", "手の少陰心経", "手の太陽小腸経", "足の太陽膀胱経", "足の少陰腎経", "手の厥陰心包経", "手の少陽三焦経", "足の少陽胆経", "足の厥陰肝経"];
-    
-    order.forEach(ch => {
-        if (masterData.some(i => i.所属経絡 === ch)) {
-            const btn = document.createElement('button');
-            btn.className = 'filter-btn';
-            btn.innerText = ch;
-            btn.onclick = () => setFilter(ch);
-            filterArea.appendChild(btn);
-        }
-    });
-}
-
 function setFilter(ch) {
-    if (currentFilter === ch) {
-        currentFilter = ""; // 同じのを押したら解除
-    } else {
-        currentFilter = ch;
-    }
-    
+    currentFilter = (currentFilter === ch) ? "" : ch;
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.innerText === currentFilter);
-        if (currentFilter === "すべて") document.getElementById('btn-all').classList.add('active');
+        btn.classList.toggle('active', btn.innerText === ch || (ch === 'すべて' && btn.id === 'btn-all'));
+        if (currentFilter === "") btn.classList.remove('active');
     });
     updateList();
 }
 
 function parseCSV(text) {
     const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
     const delimiter = lines[0].includes('\t') ? '\t' : ',';
     const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
     return lines.slice(1).map(line => {
@@ -144,6 +137,51 @@ function parseCSV(text) {
 
 function createTags(memo) {
     if (!memo) return "";
-    let html = '<div class="tags">';
-    if (memo.includes("募穴")) html += '<span class="tag bo">募穴</span>';
-    if (memo.includes("原穴")) html += '<span class="tag gen">原穴</span>';
+    let tags = [];
+    if (memo.includes("募穴")) tags.push('<span class="tag bo">募穴</span>');
+    if (memo.includes("原穴")) tags.push('<span class="tag gen">原穴</span>');
+    if (memo.includes("郄穴")) tags.push('<span class="tag geki">郄穴</span>');
+    if (memo.includes("絡穴")) tags.push('<span class="tag raku">絡穴</span>');
+    if (memo.includes("八会穴")) tags.push('<span class="tag other">八会穴</span>');
+    if (memo.includes("八脈交会穴")) tags.push('<span class="tag other">八脈</span>');
+    return tags.length > 0 ? `<div class="tags">${tags.join('')}</div>` : "";
+}
+
+function updateList() {
+    const word = document.getElementById('search-box').value.toLowerCase();
+    const container = document.getElementById('list-container');
+    
+    if (!currentFilter && !word) {
+        container.innerHTML = '<div class="guide-msg">上のボタンで経絡を選択するか<br>キーワードを入力してください</div>';
+        document.getElementById('count-display').innerText = "";
+        return;
+    }
+
+    const filtered = masterData.filter(i => {
+        // ボタンフィルターの判定
+        // ボタンのテキストとCSVの所属経絡を部分一致で判定（例：「肺経」で「手の太陰肺経」にヒットさせる）
+        let shortName = currentFilter.replace('経', '');
+        const matchFilter = (!currentFilter || currentFilter === "すべて" || i.所属経絡.includes(shortName));
+        const matchWord = (!word || i.経穴名.includes(word) || i.読み.includes(word) || i.部位.includes(word) || i['備考（属性タグ・別説含む）'].includes(word));
+        return matchFilter && matchWord;
+    });
+
+    document.getElementById('count-display').innerText = `該当: ${filtered.length} 件`;
+    container.innerHTML = filtered.map(i => `
+        <div class="item-card">
+            <div class="item-header">
+                <span class="name">${i.経穴名}</span>
+                <span class="ruby">${i.読み}</span>
+            </div>
+            <div class="meta-info">${i.所属経絡}</div>
+            <div class="detail-row"><span class="label">部位</span>${i.部位}</div>
+            <div class="detail-row"><span class="label">取穴</span>${i['取穴法（指標）']}</div>
+            <div class="detail-row"><span class="label">解剖</span>${i.解剖}</div>
+            ${i['備考（属性タグ・別説含む）'] ? `<div class="detail-row"><span class="label">備考</span>${i['備考（属性タグ・別説含む）']}</div>` : ''}
+            ${createTags(i['備考（属性タグ・別説含む）'])}
+        </div>
+    `).join('');
+}
+</script>
+</body>
+</html>
