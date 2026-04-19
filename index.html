@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>経穴マスター Pro - 決定版（ふりがな対応）</title>
+    <title>経穴マスター Pro - 辞典決定版</title>
     <style>
         :root {
             --main-blue: #007AFF;
@@ -15,7 +15,7 @@
         .header { 
             position: sticky; top: 0; background: var(--bg-light); padding: 15px 0 10px; z-index: 1000; border-bottom: 2px solid #D1D1D6; 
         }
-        h1 { font-size: 1.2rem; margin: 0 0 12px; text-align: center; font-weight: 800; }
+        h1 { font-size: 1.1rem; margin: 0 0 12px; text-align: center; font-weight: 800; }
         
         .controls { display: flex; flex-direction: column; gap: 8px; }
         #search-box {
@@ -23,6 +23,7 @@
             background: #FFF; font-size: 1.1rem; outline: none; box-sizing: border-box;
         }
 
+        /* 選び直しボタン */
         .reselect-area { display: none; margin-top: 8px; }
         .reselect-area.visible { display: block; }
         .reselect-btn {
@@ -30,6 +31,7 @@
             color: var(--main-blue); border: 2px solid var(--main-blue); font-size: 0.9rem; font-weight: bold; cursor: pointer;
         }
 
+        /* 扉メニュー */
         .filter-section { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }
         .filter-section.hidden { display: none; }
         .filter-btn {
@@ -40,6 +42,7 @@
         .filter-btn::after { content: "➔"; color: #C6C6C8; }
         .pair-label { font-size: 0.8rem; color: #8E8E93; margin: 10px 0 2px 5px; font-weight: bold; }
 
+        /* リスト表示 */
         .list-container { margin-top: 15px; padding-bottom: 100px; }
         .item-card {
             background: var(--card-bg); border-radius: 15px; padding: 20px;
@@ -52,6 +55,7 @@
         .detail-row { font-size: 0.95rem; line-height: 1.5; margin-bottom: 6px; border-bottom: 1px solid #F2F2F7; padding-bottom: 4px; }
         .label { font-weight: 700; color: #8E8E93; min-width: 55px; display: inline-block; }
 
+        /* 特大カードモーダル */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); z-index: 2000; display: none;
@@ -86,7 +90,7 @@
         <div class="controls">
             <input type="text" id="search-box" placeholder="名前(かな/漢字)や部位で検索..." oninput="onSearchInput()">
             <div class="reselect-area" id="reselect-area">
-                <button class="reselect-btn" onclick="showMenu()">⏎ 別の経絡を選択し直す</button>
+                <button class="reselect-btn" onclick="showMenu()">⏎ メニューに戻る</button>
             </div>
         </div>
     </div>
@@ -125,12 +129,10 @@
             <span class="big-name" id="modal-name"></span>
             <span id="modal-ruby" style="color:#636366; padding-left:25px;"></span>
             <div id="modal-meridian" style="color:var(--main-blue); font-weight:bold; margin:15px 0 15px 25px;"></div>
-            
             <div class="big-detail"><span class="big-label">📍 部位</span><div id="modal-pos"></div></div>
             <div class="big-detail"><span class="big-label">🖐️ 取穴法</span><div id="modal-method"></div></div>
             <div class="big-detail"><span class="big-label">🦴 解剖</span><div id="modal-anatomy"></div></div>
             <div class="big-detail" id="modal-note-row"><span class="big-label">📝 備考</span><div id="modal-note"></div></div>
-
             <div class="nav-buttons">
                 <button class="nav-btn" id="prev-btn" onclick="navigateCard(-1)">◀ 前へ</button>
                 <button class="nav-btn" id="next-btn" onclick="navigateCard(1)">次へ ▶</button>
@@ -142,11 +144,13 @@
 let masterData = [];
 let filteredIndices = [];
 let currentCardPointer = 0;
+let currentFilter = "";
 
 window.onload = async function() {
     try {
         const res = await fetch('data1.csv?v=' + Date.now());
-        masterData = parseCSV(await res.text());
+        const text = await res.text();
+        masterData = parseCSV(text);
     } catch (e) { document.getElementById('count-display').innerText = "読み込み失敗"; }
 };
 
@@ -167,7 +171,8 @@ function showMenu() {
     document.getElementById('reselect-area').classList.remove('visible');
     document.getElementById('list-container').innerHTML = '';
     document.getElementById('count-display').innerText = "";
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('search-box').value = "";
+    currentFilter = "";
 }
 
 function onSearchInput() {
@@ -175,11 +180,13 @@ function onSearchInput() {
     if (word.length > 0) {
         document.getElementById('filter-area').classList.add('hidden');
         document.getElementById('reselect-area').classList.add('visible');
+        updateList();
+    } else if (!currentFilter) {
+        // 検索もフィルタもない時はメニューに戻す
+        showMenu();
     }
-    updateList();
 }
 
-let currentFilter = "";
 function setFilter(ch) {
     currentFilter = ch;
     document.getElementById('filter-area').classList.add('hidden');
@@ -193,20 +200,15 @@ function updateList() {
     
     filteredIndices = [];
     masterData.forEach((item, index) => {
-        const matchFilter = (currentFilter === "すべて" || item.所属経絡 === currentFilter);
-        
-        // 【修正ポイント】経穴名(漢字) OR 読み(かな) OR 部位 で検索
+        const matchFilter = (currentFilter === "すべて" || !currentFilter || item.所属経絡 === currentFilter);
         const matchWord = (!word || 
             item.経穴名.includes(word) || 
             item.読み.includes(word) || 
             item.部位.includes(word) || 
             item['備考（属性タグ・別説含む）'].includes(word)
         );
-
-        if (matchFilter && (currentFilter || word)) filteredIndices.push(index);
+        if (matchFilter && matchWord) filteredIndices.push(index);
     });
-
-    if (filteredIndices.length === 0 && !word) return;
 
     document.getElementById('count-display').innerText = `該当: ${filteredIndices.length} 件`;
     container.innerHTML = filteredIndices.map((masterIdx, pointer) => {
