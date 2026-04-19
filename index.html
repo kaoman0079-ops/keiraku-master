@@ -10,8 +10,9 @@
             --bg-light: #F2F2F7;
             --card-bg: #FFFFFF;
         }
-        body { font-family: -apple-system, sans-serif; background: var(--bg-light); margin: 0; padding: 0 15px; color: #1C1C1E; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg-light); margin: 0; padding: 0 15px; color: #1C1C1E; -webkit-text-size-adjust: 100%; }
         
+        /* ヘッダー固定 */
         .header { 
             position: sticky; top: 0; background: var(--bg-light); padding: 15px 0 10px; z-index: 1000; border-bottom: 2px solid #D1D1D6; 
         }
@@ -23,7 +24,6 @@
             background: #FFF; font-size: 1.1rem; outline: none; box-sizing: border-box;
         }
 
-        /* 選び直しボタン */
         .reselect-area { display: none; margin-top: 8px; }
         .reselect-area.visible { display: block; }
         .reselect-btn {
@@ -42,7 +42,7 @@
         .filter-btn::after { content: "➔"; color: #C6C6C8; }
         .pair-label { font-size: 0.8rem; color: #8E8E93; margin: 10px 0 2px 5px; font-weight: bold; }
 
-        /* リスト表示 */
+        /* リスト表示（全情報を網羅） */
         .list-container { margin-top: 15px; padding-bottom: 100px; }
         .item-card {
             background: var(--card-bg); border-radius: 15px; padding: 20px;
@@ -68,6 +68,7 @@
         }
         .close-btn { position: absolute; top: 10px; right: 20px; font-size: 2.5rem; border: none; background: none; color: #C6C6C8; cursor: pointer; }
 
+        /* 連続ナビゲーション */
         .nav-buttons {
             display: flex; justify-content: space-between; margin-top: 25px; padding-top: 15px;
             position: sticky; bottom: -25px; background: #FFF; border-top: 2px solid #F2F2F7;
@@ -81,6 +82,8 @@
         .big-name { font-size: 2.2rem; font-weight: 900; display: block; border-left: 10px solid var(--main-blue); padding-left: 15px; }
         .big-detail { margin-top: 20px; font-size: 1.2rem; line-height: 1.8; border-top: 1px solid #F2F2F7; padding-top: 12px; }
         .big-label { color: var(--main-blue); font-weight: 800; font-size: 0.9rem; display: block; margin-bottom: 5px; }
+
+        .jump-link { color: var(--main-blue); text-decoration: underline; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -128,11 +131,13 @@
             <button class="close-btn" onclick="closeModal()">×</button>
             <span class="big-name" id="modal-name"></span>
             <span id="modal-ruby" style="color:#636366; padding-left:25px;"></span>
-            <div id="modal-meridian" style="color:var(--main-blue); font-weight:bold; margin:15px 0 15px 25px;"></div>
+            <div id="modal-meridian" style="margin:15px 0 15px 25px; font-weight:bold;"></div>
+            
             <div class="big-detail"><span class="big-label">📍 部位</span><div id="modal-pos"></div></div>
             <div class="big-detail"><span class="big-label">🖐️ 取穴法</span><div id="modal-method"></div></div>
             <div class="big-detail"><span class="big-label">🦴 解剖</span><div id="modal-anatomy"></div></div>
             <div class="big-detail" id="modal-note-row"><span class="big-label">📝 備考</span><div id="modal-note"></div></div>
+
             <div class="nav-buttons">
                 <button class="nav-btn" id="prev-btn" onclick="navigateCard(-1)">◀ 前へ</button>
                 <button class="nav-btn" id="next-btn" onclick="navigateCard(1)">次へ ▶</button>
@@ -156,6 +161,7 @@ window.onload = async function() {
 
 function parseCSV(text) {
     const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
     const headers = lines[0].split(lines[0].includes('\t') ? '\t' : ',').map(h => h.trim().replace(/^"|"$/g, ''));
     return lines.slice(1).map(line => {
         const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
@@ -173,6 +179,7 @@ function showMenu() {
     document.getElementById('count-display').innerText = "";
     document.getElementById('search-box').value = "";
     currentFilter = "";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function onSearchInput() {
@@ -182,7 +189,6 @@ function onSearchInput() {
         document.getElementById('reselect-area').classList.add('visible');
         updateList();
     } else if (!currentFilter) {
-        // 検索もフィルタもない時はメニューに戻す
         showMenu();
     }
 }
@@ -192,6 +198,13 @@ function setFilter(ch) {
     document.getElementById('filter-area').classList.add('hidden');
     document.getElementById('reselect-area').classList.add('visible');
     updateList();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function jumpToMeridian(meridianName) {
+    closeModal();
+    document.getElementById('search-box').value = "";
+    setFilter(meridianName);
 }
 
 function updateList() {
@@ -230,11 +243,18 @@ function openModal(pointer) {
     const item = masterData[filteredIndices[pointer]];
     document.getElementById('modal-name').innerText = item.経穴名;
     document.getElementById('modal-ruby').innerText = item.読み;
-    document.getElementById('modal-meridian').innerText = item.所属経絡;
+    
+    const meridianName = item.所属経絡;
+    document.getElementById('modal-meridian').innerHTML = `
+        <span class="jump-link" onclick="jumpToMeridian('${meridianName}')">
+            ${meridianName} ➔
+        </span>`;
+
     document.getElementById('modal-pos').innerText = item.部位;
     document.getElementById('modal-method').innerText = item['取穴法（指標）'];
     document.getElementById('modal-anatomy').innerText = item.解剖;
     document.getElementById('modal-note').innerText = item['備考（属性タグ・別説含む）'] || "なし";
+    
     document.getElementById('prev-btn').disabled = (pointer === 0);
     document.getElementById('next-btn').disabled = (pointer === filteredIndices.length - 1);
     document.getElementById('modal-overlay').classList.add('active');
