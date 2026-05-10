@@ -20,45 +20,36 @@
             -webkit-text-size-adjust: 100%;
         }
         
-        /* --- 【修正版】スクロールしても常に固定され、垂線に合わせるボタン --- */
+        /* --- ポータルボタン：常に固定（fixed）し、垂線を合わせる --- */
         .portal-back-btn {
-            position: fixed; /* absoluteからfixedに変更：これで上に流れません */
+            position: fixed;
             top: 15px;
             left: 50%;
-            /* 辞典のメイン幅想定(500px)の半分に合わせる */
-            transform: translateX(-250px); 
+            transform: translateX(-250px); /* メイン幅500pxの半分 */
             z-index: 2000;
             text-decoration: none;
             background: rgba(255, 255, 255, 0.95);
             padding: 8px 14px;
             border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 視認性を上げるため影を少し強く */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             border: 1px solid #D1D1D6;
             color: var(--accent-blue);
             font-size: 0.85rem;
             font-weight: bold;
             display: flex;
             align-items: center;
-            transition: transform 0.2s ease, background 0.2s;
+            transition: background 0.2s;
         }
 
-        /* スマホ・タブレットなど画面幅が狭い時は端に寄せる */
         @media (max-width: 600px) {
-            .portal-back-btn {
-                left: 10px;
-                top: 10px;
-                transform: none;
-            }
+            .portal-back-btn { left: 10px; top: 10px; transform: none; }
         }
         
-        .portal-back-btn:hover { background: #FFFFFF; border-color: var(--accent-blue); }
-        /* transformの値を維持しつつクリック感を出す */
         .portal-back-btn:active { transform: translateX(-250px) scale(0.95); }
         @media (max-width: 600px) { .portal-back-btn:active { transform: scale(0.95); } }
-        /* -------------------------------------- */
 
         .header { 
-            position: sticky; top: 0; background: var(--bg-light); padding: 50px 0 10px; z-index: 1000; border-bottom: 2px solid #D1D1D6; 
+            position: sticky; top: 0; background: var(--bg-light); padding: 55px 0 10px; z-index: 1000; border-bottom: 2px solid #D1D1D6; 
         }
         h1 { font-size: 1.1rem; margin: 0 0 12px; text-align: center; font-weight: 800; }
         
@@ -75,7 +66,7 @@
             color: #007AFF; border: 2px solid #007AFF; font-size: 0.9rem; font-weight: bold; cursor: pointer;
         }
 
-        .filter-section { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .filter-section { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; max-width: 500px; margin: 0 auto; }
         .filter-section.hidden { display: none; }
         .filter-btn {
             width: 100%; padding: 18px 15px; border-radius: 12px; background: var(--card-bg); border: 1px solid #D1D1D6;
@@ -85,7 +76,7 @@
         .filter-btn::after { content: "➔"; color: #C6C6C8; }
         .pair-label { font-size: 0.8rem; color: #8E8E93; margin: 10px 0 2px 5px; font-weight: bold; }
 
-        .list-container { margin-top: 15px; padding-bottom: 100px; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .list-container { margin-top: 15px; padding-bottom: 100px; max-width: 500px; margin: 0 auto; }
         .item-card {
             background: var(--card-bg); border-radius: 15px; padding: 20px;
             margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -103,47 +94,20 @@
             justify-content: center; align-items: center; padding: 20px;
         }
         .modal-overlay.active { display: flex; }
-        
         .big-card {
             background: #FFF; width: 100%; max-width: 500px; border-radius: 25px;
             position: relative; max-height: 85vh; display: flex; flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
-        
-        .big-card-content {
-            padding: 25px; overflow-y: auto; flex-grow: 1;
-            scrollbar-width: thin;
-        }
-        .big-card-content::-webkit-scrollbar { width: 6px; }
-        .big-card-content::-webkit-scrollbar-thumb { background: #C6C6C8; border-radius: 10px; }
-
+        .big-card-content { padding: 25px; overflow-y: auto; flex-grow: 1; }
         .close-btn { position: absolute; top: 10px; right: 20px; font-size: 2.5rem; border: none; background: none; color: #C6C6C8; cursor: pointer; z-index: 10; }
-
-        .nav-buttons {
-            display: flex; justify-content: space-between; padding: 15px 25px;
-            background: #F9F9F9; border-top: 1px solid #D1D1D6;
-        }
-        .nav-btn {
-            background: #007AFF; color: #FFF; border: none; padding: 12px 25px;
-            border-radius: 10px; font-weight: 800; font-size: 1.1rem; cursor: pointer;
-        }
+        .nav-buttons { display: flex; justify-content: space-between; padding: 15px 25px; background: #F9F9F9; border-top: 1px solid #D1D1D6; }
+        .nav-btn { background: #007AFF; color: #FFF; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 800; font-size: 1.1rem; cursor: pointer; }
         .nav-btn:disabled { background: #E5E5EA; color: #8E8E93; cursor: default; }
-
         .big-name { font-size: 2.2rem; font-weight: 900; display: block; border-left: 10px solid #007AFF; padding-left: 15px; }
         .big-detail { margin-top: 20px; font-size: 1.2rem; line-height: 1.8; border-top: 1px solid #F2F2F7; padding-top: 12px; }
         .big-label { color: #007AFF; font-weight: 800; font-size: 0.9rem; display: block; margin-bottom: 5px; }
-
-        .jump-link {
-            color: var(--main-blue);
-            text-decoration: none;
-            border-bottom: 1.5px dotted var(--main-blue);
-            cursor: pointer;
-            font-weight: 900;
-            display: inline-block;
-            padding: 2px 0;
-            transition: 0.2s;
-        }
+        .jump-link { color: var(--main-blue); text-decoration: none; border-bottom: 1.5px dotted var(--main-blue); cursor: pointer; font-weight: 900; display: inline-block; transition: 0.2s; }
         .jump-link:hover { border-bottom-style: solid; }
     </style>
 </head>
@@ -162,6 +126,168 @@
             </div>
         </div>
     </div>
-    ```
 
-これで、経穴リストをどれだけ下にスクロールしても、常に同じ場所にポータルボタンが待機してくれるようになりました。名上司、これで「戻る」ストレスも解消されるはずです！
+    <div class="filter-section" id="filter-area">
+        <button class="filter-btn" style="background:#8E8E93; color:#FFF;" onclick="setFilter('すべて')">すべての経穴を表示</button>
+        <div class="pair-label">奇経（身体の中心）</div>
+        <button class="filter-btn" onclick="setFilter('督脈')">督脈</button>
+        <button class="filter-btn" onclick="setFilter('任脈')">任脈</button>
+        <div class="pair-label">手：太陰・陽明</div>
+        <button class="filter-btn" onclick="setFilter('手の太陰肺経')">手の太陰肺経</button>
+        <button class="filter-btn" onclick="setFilter('手の陽明大腸経')">手の陽明大腸経</button>
+        <div class="pair-label">足：陽明・太陰</div>
+        <button class="filter-btn" onclick="setFilter('足の陽明胃経')">足の陽明胃経</button>
+        <button class="filter-btn" onclick="setFilter('足の太陰脾経')">足の太陰脾経</button>
+        <div class="pair-label">手：少陰・太陽</div>
+        <button class="filter-btn" onclick="setFilter('手の少陰心経')">手の少陰心経</button>
+        <button class="filter-btn" onclick="setFilter('手の太陽小腸経')">手の太陽小腸経</button>
+        <div class="pair-label">足：太陽・少陰</div>
+        <button class="filter-btn" onclick="setFilter('足の太陽膀胱経')">足の太陽膀胱経</button>
+        <button class="filter-btn" onclick="setFilter('足の少陰腎経')">足の少陰腎経</button>
+        <div class="pair-label">手：厥陰・少陽</div>
+        <button class="filter-btn" onclick="setFilter('手の厥陰心包経')">手の厥陰心包経</button>
+        <button class="filter-btn" onclick="setFilter('手の少陽三焦経')">手の少陽三焦経</button>
+        <div class="pair-label">足：少陽・厥陰</div>
+        <button class="filter-btn" onclick="setFilter('足の少陽胆経')">足の少陽胆経</button>
+        <button class="filter-btn" onclick="setFilter('足の厥陰肝経')">足の厥陰肝経</button>
+    </div>
+
+    <div id="count-display" style="text-align:center; font-size:0.9rem; color:#8E8E93; margin-top:10px;"></div>
+    <div id="list-container" class="list-container"></div>
+
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+        <div class="big-card" onclick="event.stopPropagation()">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <div class="big-card-content">
+                <span class="big-name" id="modal-name"></span>
+                <span id="modal-ruby" style="color:#636366; padding-left:15px; font-weight:bold;"></span>
+                <div id="modal-meridian-wrap" style="margin:15px 0 15px 15px;"></div>
+                <div class="big-detail"><span class="big-label">📍 部位</span><div id="modal-pos"></div></div>
+                <div class="big-detail"><span class="big-label">🖐️ 取穴法</span><div id="modal-method"></div></div>
+                <div class="big-detail"><span class="big-label">🦴 解剖</span><div id="modal-anatomy"></div></div>
+                <div class="big-detail" id="modal-note-row"><span class="big-label">📝 備考</span><div id="modal-note"></div></div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" id="prev-btn" onclick="navigateCard(-1)">◀ 前へ</button>
+                <button class="nav-btn" id="next-btn" onclick="navigateCard(1)">次へ ▶</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+let masterData = [];
+let filteredIndices = [];
+let currentCardPointer = 0;
+let currentFilter = "";
+
+window.onload = async function() {
+    try {
+        const res = await fetch('data1.csv?v=' + Date.now());
+        const text = await res.text();
+        masterData = parseCSV(text);
+    } catch (e) { document.getElementById('count-display').innerText = "読み込み失敗"; }
+};
+
+function parseCSV(text) {
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(lines[0].includes('\t') ? '\t' : ',').map(h => h.trim().replace(/^"|"$/g, ''));
+    return lines.slice(1).map(line => {
+        const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+        const values = line.split(regex);
+        let obj = {};
+        headers.forEach((h, i) => obj[h] = (values[i] || "").trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+        return obj;
+    }).filter(i => i.経穴名);
+}
+
+function showMenu() {
+    document.getElementById('filter-area').classList.remove('hidden');
+    document.getElementById('reselect-area').classList.remove('visible');
+    document.getElementById('list-container').innerHTML = '';
+    document.getElementById('count-display').innerText = "";
+    document.getElementById('search-box').value = "";
+    currentFilter = "";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function onSearchInput() {
+    const word = document.getElementById('search-box').value;
+    if (word.length > 0) {
+        document.getElementById('filter-area').classList.add('hidden');
+        document.getElementById('reselect-area').classList.add('visible');
+        updateList();
+    } else if (!currentFilter) {
+        showMenu();
+    }
+}
+
+function setFilter(ch) {
+    currentFilter = ch;
+    document.getElementById('filter-area').classList.add('hidden');
+    document.getElementById('reselect-area').classList.add('visible');
+    updateList();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function jumpToMeridian(meridianName) {
+    closeModal();
+    document.getElementById('search-box').value = "";
+    setFilter(meridianName);
+}
+
+function updateList() {
+    const word = document.getElementById('search-box').value.toLowerCase();
+    const container = document.getElementById('list-container');
+    filteredIndices = [];
+    masterData.forEach((item, index) => {
+        const matchFilter = (currentFilter === "すべて" || !currentFilter || item.所属経絡 === currentFilter);
+        const matchWord = (!word || 
+            item.経穴名.includes(word) || 
+            item.読み.includes(word) || 
+            item.部位.includes(word) || 
+            item['備考（属性タグ・別説含む）'].includes(word)
+        );
+        if (matchFilter && matchWord) filteredIndices.push(index);
+    });
+    document.getElementById('count-display').innerText = `該当: ${filteredIndices.length} 件`;
+    container.innerHTML = filteredIndices.map((masterIdx, pointer) => {
+        const i = masterData[masterIdx];
+        return `<div class="item-card" onclick="openModal(${pointer})">
+                <div class="name">${i.経穴名} <span class="ruby">（${i.読み}）</span></div>
+                <div class="meta-info">${i.所属経絡}</div>
+                <div class="detail-row"><span class="label">部位</span>${i.部位}</div>
+                <div class="detail-row"><span class="label">取穴</span>${i['取穴法（指標）']}</div>
+                <div class="detail-row"><span class="label">解剖</span>${i.解剖}</div>
+                ${i['備考（属性タグ・別説含む）'] ? `<div class="detail-row"><span class="label">備考</span>${i['備考（属性タグ・別説含む）']}</div>` : ''}
+            </div>`;
+    }).join('');
+}
+
+function openModal(pointer) {
+    currentCardPointer = pointer;
+    const item = masterData[filteredIndices[pointer]];
+    document.getElementById('modal-name').innerText = item.経穴名;
+    document.getElementById('modal-ruby').innerText = item.読み;
+    const meridianName = item.所属経絡;
+    document.getElementById('modal-meridian-wrap').innerHTML = `<span class="jump-link" onclick="jumpToMeridian('${meridianName}')">${meridianName}</span>`;
+    document.getElementById('modal-pos').innerText = item.部位;
+    document.getElementById('modal-method').innerText = item['取穴法（指標）'];
+    document.getElementById('modal-anatomy').innerText = item.解剖;
+    document.getElementById('modal-note').innerText = item['備考（属性タグ・別説含む）'] || "なし";
+    document.getElementById('prev-btn').disabled = (pointer === 0);
+    document.getElementById('next-btn').disabled = (pointer === filteredIndices.length - 1);
+    document.getElementById('modal-overlay').classList.add('active');
+}
+
+function navigateCard(step) {
+    const newPointer = currentCardPointer + step;
+    if (newPointer >= 0 && newPointer < filteredIndices.length) openModal(newPointer);
+}
+
+function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('active');
+}
+</script>
+</body>
+</html>
