@@ -6,7 +6,53 @@
     <title>経絡マスター Pro - Level System</title>
     <style>
         :root { --main-blue: #3498db; --bg-color: #f0f2f5; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-color); padding: 20px; max-width: 800px; margin: 0 auto; color: #333; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg-color); 
+            padding: 60px 20px 20px; /* ボタン用の余白を確保 */
+            max-width: 800px; 
+            margin: 0 auto; 
+            color: #333; 
+            position: relative;
+        }
+
+        /* --- 【追加】メインカードの垂線に合わせたポータルボタン --- */
+        .portal-back-btn {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            /* 垂線を合わせるための計算：max-width 800px の半分(400px) */
+            transform: translateX(-400px); 
+            z-index: 1000;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border: 1px solid #D1D1D6;
+            color: var(--main-blue);
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        /* スマホ・タブレットなど画面幅が狭い時の挙動 */
+        @media (max-width: 900px) {
+            .portal-back-btn {
+                position: fixed;
+                left: 15px;
+                top: 15px;
+                transform: none;
+            }
+            body { padding-top: 70px; }
+        }
+
+        .portal-back-btn:active { transform: scale(0.95) translateX(-400px); background: #fff; }
+        @media (max-width: 900px) { .portal-back-btn:active { transform: scale(0.95); } }
+        /* -------------------------------------- */
+
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         h1 { text-align: center; color: #2c3e50; font-size: 1.5rem; margin-top: 0; }
         .level-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
@@ -29,11 +75,14 @@
         }
         .explanation { display: none; margin-top: 20px; padding: 15px; background: #fff9db; border-radius: 10px; font-size: 0.95rem; line-height: 1.6; border-left: 5px solid #f1c40f; }
         .status { text-align: center; color: #7f8c8d; }
-        /* 経絡名を見やすくするための強調 */
         .keiraku-tag { display: inline-block; background: #2c3e50; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-bottom: 5px; }
     </style>
 </head>
 <body>
+
+    <a href="https://kaoman0079-ops.github.io/Meridian-Node/" class="portal-back-btn">
+        <span style="margin-right: 6px; font-size: 1.1rem;">⏎</span> 🏠 Portal
+    </a>
 
     <div class="card">
         <h1>📍 経絡マスター Pro</h1>
@@ -166,7 +215,6 @@ function checkAnswer(selected, btn, correct) {
     const q = quizQueue[0];
     const exp = document.getElementById('explanation-box');
     exp.style.display = 'block';
-    // 解説欄の「部位」の上に「所属経絡」を表示するように変更
     exp.innerHTML = `<div class="keiraku-tag">${q['所属経絡']}</div><br>` +
                     `<strong>【正解：${q['経穴名']}】</strong><br>` +
                     `📍 部位：${q['部位']}<br>` +
