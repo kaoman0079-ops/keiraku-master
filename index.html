@@ -165,6 +165,7 @@
                 <div class="big-detail"><span class="big-label">📍 部位</span><div id="modal-pos"></div></div>
                 <div class="big-detail"><span class="big-label">🖐️ 取穴法</span><div id="modal-method"></div></div>
                 <div class="big-detail"><span class="big-label">🦴 解剖</span><div id="modal-anatomy"></div></div>
+                <div class="big-detail" id="modal-map-row"><span class="big-label">🗺️ 場所の目安（ラフ図）</span><div id="modal-map"></div></div>
                 <div class="big-detail" id="modal-note-row"><span class="big-label">📝 備考</span><div id="modal-note"></div></div>
             </div>
             <div class="nav-buttons">
@@ -174,8 +175,10 @@
         </div>
     </div>
 
+<script src="charts.js"></script>
 <script>
 let masterData = [];
+let pointMap = {};
 let filteredIndices = [];
 let currentCardPointer = 0;
 let currentFilter = "";
@@ -186,6 +189,11 @@ window.onload = async function() {
         const text = await res.text();
         masterData = parseCSV(text);
     } catch (e) { document.getElementById('count-display').innerText = "読み込み失敗"; }
+    try {
+        const res2 = await fetch('points_map.csv?v=' + Date.now());
+        const text2 = await res2.text();
+        parseCSV(text2).forEach(r => { if (r.ID) pointMap[r.ID] = { view: r.view, x: +r.x, y: +r.y, dermatome: r.dermatome }; });
+    } catch (e) { /* ラフ図データがない場合は場所欄を出さない */ }
 };
 
 function parseCSV(text) {
@@ -274,6 +282,9 @@ function openModal(pointer) {
     document.getElementById('modal-pos').innerText = item.部位;
     document.getElementById('modal-method').innerText = item['取穴法（指標）'];
     document.getElementById('modal-anatomy').innerText = item.解剖;
+    const mapHtml = (typeof renderPointMap === 'function') ? renderPointMap(item, masterData, pointMap) : '';
+    document.getElementById('modal-map').innerHTML = mapHtml;
+    document.getElementById('modal-map-row').style.display = mapHtml ? '' : 'none';
     document.getElementById('modal-note').innerText = item['備考（属性タグ・別説含む）'] || "なし";
     document.getElementById('prev-btn').disabled = (pointer === 0);
     document.getElementById('next-btn').disabled = (pointer === filteredIndices.length - 1);
