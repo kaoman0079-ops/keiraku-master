@@ -253,12 +253,8 @@ function updateList() {
     filteredIndices = [];
     masterData.forEach((item, index) => {
         const matchFilter = (currentFilter === "すべて" || !currentFilter || item.所属経絡 === currentFilter);
-        const matchWord = (!word || 
-            item.経穴名.includes(word) || 
-            item.読み.includes(word) || 
-            item.部位.includes(word) || 
-            item['備考（属性タグ・別説含む）'].includes(word)
-        );
+        const haystack = [item.ID, item.経穴名, item.読み, item.所属経絡, item.部位, item['取穴法（指標）'], item.解剖, item['備考（属性タグ・別説含む）'], (pointMap[item.ID] || {}).dermatome || ''].join(' ').toLowerCase();
+        const matchWord = (!word || haystack.includes(word));
         if (matchFilter && matchWord) filteredIndices.push(index);
     });
     document.getElementById('count-display').innerText = `該当: ${filteredIndices.length} 件`;
