@@ -71,7 +71,7 @@ function renderPointMap(item, allData, mapData) {
         .filter(d => d.所属経絡 === item.所属経絡)
         .map(d => mapData[d.ID] ? { ...mapData[d.ID], ID: d.ID, name: d.経穴名 } : null)
         .filter(Boolean);
-    const charts = `<div style="display:flex;gap:8px">${chartSVG('front', meridianPts, item.ID)}${chartSVG('back', meridianPts, item.ID)}</div>`;
+    const charts = chartSVG(mine.view, meridianPts, item.ID);
     const derma = mine.dermatome ? `<div style="margin-top:8px;font-size:0.95rem"><span class="label">デルマトーム</span>${mine.dermatome} の領域が目安</div>` : '';
     const note = `<div style="font-size:0.78rem;color:#8E8E93;margin-top:4px">点は大体の位置の目安です（精密図ではありません）。線は同じ経絡の流れ、オレンジがこの経穴。</div>`;
     return charts + derma + note;
@@ -143,7 +143,7 @@ function renderHeadMap(item, allData, headData, mapData) {
         .filter(d => d.所属経絡 === item.所属経絡)
         .map(d => headData[d.ID] ? { ...headData[d.ID], ID: d.ID, name: d.経穴名 } : null)
         .filter(Boolean);
-    const charts = `<div style="display:flex;gap:6px">${headChartSVG('front', meridianPts, item.ID)}${headChartSVG('side', meridianPts, item.ID)}${headChartSVG('back', meridianPts, item.ID)}</div>`;
+    const charts = headChartSVG(mine.view, meridianPts, item.ID);
     const dm = (mapData[item.ID] || {}).dermatome;
     const derma = dm ? `<div style="margin-top:8px;font-size:0.95rem"><span class="label">デルマトーム</span>${dm} の領域が目安</div>` : '';
     const note = `<div style="font-size:0.78rem;color:#8E8E93;margin-top:4px">頭頸部の拡大図です。点は大体の位置の目安（精密図ではありません）。線は同じ経絡の流れ、オレンジがこの経穴。</div>`;
