@@ -192,7 +192,10 @@ window.onload = async function() {
     try {
         const res2 = await fetch('points_map.csv?v=' + Date.now());
         const text2 = await res2.text();
-        parseCSV(text2).forEach(r => { if (r.ID) pointMap[r.ID] = { view: r.view, x: +r.x, y: +r.y, dermatome: r.dermatome }; });
+        text2.trim().split(/\r?\n/).slice(1).forEach(line => {
+            const cols = line.split(',');
+            if (cols[0]) pointMap[cols[0]] = { view: cols[1], x: +cols[2], y: +cols[3], dermatome: cols[4] };
+        });
     } catch (e) { /* ラフ図データがない場合は場所欄を出さない */ }
 };
 
