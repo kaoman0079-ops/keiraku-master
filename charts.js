@@ -76,3 +76,76 @@ function renderPointMap(item, allData, mapData) {
     const note = `<div style="font-size:0.78rem;color:#8E8E93;margin-top:4px">点は大体の位置の目安です（精密図ではありません）。線は同じ経絡の流れ、オレンジがこの経穴。</div>`;
     return charts + derma + note;
 }
+
+// ===== 頭頸部チャート（正面・側面・背面、首まで） =====
+// head_map.csv の x,y は 0-1000（x: 正中=500、y: 頭頂=0〜肩=1000）。側面は左向きの横顔。
+
+function headSilhouette(view) {
+    let s = '';
+    if (view === 'front') {
+        s += `<ellipse cx="13" cy="118" rx="5" ry="12" fill="#D7E5F4"/><ellipse cx="187" cy="118" rx="5" ry="12" fill="#D7E5F4"/>`;
+        s += `<ellipse cx="100" cy="95" rx="58" ry="78" fill="#D7E5F4"/>`;
+        s += `<path d="M88,168 L112,168 L116,206 L84,206 Z" fill="#D7E5F4"/>`;
+        s += `<path d="M58,250 L66,220 Q100,206 134,220 L142,250 Z" fill="#D7E5F4"/>`;
+        s += `<ellipse cx="76" cy="107" rx="7" ry="4.5" fill="#A9C6E8"/><ellipse cx="124" cy="107" rx="7" ry="4.5" fill="#A9C6E8"/>`;
+        s += `<path d="M100,112 L97,140 Q100,144 103,140" fill="none" stroke="#A9C6E8" stroke-width="1.4"/>`;
+        s += `<path d="M86,168 Q100,174 114,168" fill="none" stroke="#A9C6E8" stroke-width="1.4"/>`;
+    } else if (view === 'back') {
+        s += `<ellipse cx="100" cy="95" rx="58" ry="78" fill="#D7E5F4"/>`;
+        s += `<path d="M45,80 A58,78 0 0 1 155,80 L150,150 Q100,128 50,150 Z" fill="#B9D2EE"/>`;
+        s += `<path d="M88,168 L112,168 L116,206 L84,206 Z" fill="#D7E5F4"/>`;
+        s += `<path d="M58,250 L66,220 Q100,206 134,220 L142,250 Z" fill="#D7E5F4"/>`;
+        s += `<line x1="100" y1="150" x2="100" y2="206" stroke="#A9C6E8" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+    } else {
+        // 側面（左向き）: 頭蓋の楕円＋顔の輪郭＋首と肩
+        s += `<ellipse cx="118" cy="76" rx="52" ry="68" fill="#D7E5F4"/>`;
+        s += `<path d="M70,84 Q58,120 62,148 L52,150 L63,158 Q60,166 66,170 Q62,178 70,182 Q92,196 106,180 L118,150 L112,96 Q92,76 70,84 Z" fill="#D7E5F4"/>`;
+        s += `<path d="M72,182 L80,220 L146,220 L138,158 Q120,186 96,192 Q82,194 72,182 Z" fill="#D7E5F4"/>`;
+        s += `<path d="M58,250 L66,224 Q104,210 150,220 L168,250 Z" fill="#D7E5F4"/>`;
+        s += `<ellipse cx="118" cy="118" rx="7" ry="13" fill="#A9C6E8"/>`;
+    }
+    return s;
+}
+
+function headChartSVG(view, meridianPts, selectedId) {
+    const toXY = (p) => [p.x / 5, p.y / 4];
+    let dots = '';
+    const pts = meridianPts.filter(p => p.view === view);
+    if (pts.length > 1) {
+        const line = pts.map(p => toXY(p).join(',')).join(' ');
+        dots += `<polyline points="${line}" fill="none" stroke="#5B9BD5" stroke-width="1.2" opacity="0.35"/>`;
+    }
+    for (const p of pts) {
+        const [cx, cy] = toXY(p);
+        if (p.ID === selectedId) continue;
+        dots += `<circle cx="${cx}" cy="${cy}" r="2.2" fill="#5B9BD5" opacity="0.75"/>`;
+    }
+    const sel = meridianPts.find(p => p.ID === selectedId && p.view === view);
+    let selSvg = '';
+    if (sel) {
+        const [cx, cy] = toXY(sel);
+        const anchorEnd = cx > 130;
+        selSvg = `<circle cx="${cx}" cy="${cy}" r="5.5" fill="#FF5722" stroke="#FFF" stroke-width="1.6"/>` +
+            `<text x="${anchorEnd ? cx - 8 : cx + 8}" y="${cy + 3}" font-size="9.5" font-weight="bold" fill="#D84315" text-anchor="${anchorEnd ? 'end' : 'start'}">${sel.name}</text>`;
+    }
+    const label = view === 'front' ? '正面' : (view === 'side' ? '側面' : '背面');
+    return `<svg viewBox="0 0 200 250" style="width:100%;height:auto;display:block" role="img" aria-label="頭頸部${label}チャート">
+        <rect x="0" y="0" width="200" height="250" fill="#F7FAFD" rx="10"/>
+        ${headSilhouette(view)}${dots}${selSvg}
+        <text x="100" y="14" font-size="8.5" fill="#8AA5C4" text-anchor="middle">${label}</text>
+    </svg>`;
+}
+
+function renderHeadMap(item, allData, headData, mapData) {
+    const mine = headData[item.ID];
+    if (!mine) return '';
+    const meridianPts = allData
+        .filter(d => d.所属経絡 === item.所属経絡)
+        .map(d => headData[d.ID] ? { ...headData[d.ID], ID: d.ID, name: d.経穴名 } : null)
+        .filter(Boolean);
+    const charts = `<div style="display:flex;gap:6px">${headChartSVG('front', meridianPts, item.ID)}${headChartSVG('side', meridianPts, item.ID)}${headChartSVG('back', meridianPts, item.ID)}</div>`;
+    const dm = (mapData[item.ID] || {}).dermatome;
+    const derma = dm ? `<div style="margin-top:8px;font-size:0.95rem"><span class="label">デルマトーム</span>${dm} の領域が目安</div>` : '';
+    const note = `<div style="font-size:0.78rem;color:#8E8E93;margin-top:4px">頭頸部の拡大図です。点は大体の位置の目安（精密図ではありません）。線は同じ経絡の流れ、オレンジがこの経穴。</div>`;
+    return charts + derma + note;
+}
