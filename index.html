@@ -208,6 +208,21 @@ window.onload = async function() {
             if (cols[0]) headMap[cols[0]] = { view: cols[1], x: +cols[2], y: +cols[3] };
         });
     } catch (e) { /* 頭部データがない場合は全身図で代替 */ }
+    try {
+        const res4 = await fetch('region_map.csv?v=' + Date.now());
+        const text4 = await res4.text();
+        text4.trim().split(/\r?\n/).slice(1).forEach(line => {
+            const cols = line.split(',');
+            if (cols[0]) {
+                regionMap[cols[0]] = { region: cols[1], x: +cols[2], y: +cols[3] };
+                (regionPoints[cols[1]] = regionPoints[cols[1]] || []).push({ id: cols[0], x: +cols[2], y: +cols[3] });
+            }
+        });
+    } catch (e) { /* 拡大図データがない場合は従来図で代替 */ }
+    try {
+        const res5 = await fetch('regions.json?v=' + Date.now());
+        regionDefs = (await res5.json()).regions;
+    } catch (e) { regionDefs = null; }
 };
 
 function parseCSV(text) {
@@ -292,7 +307,7 @@ function openModal(pointer) {
     document.getElementById('modal-pos').innerText = item.部位;
     document.getElementById('modal-method').innerText = item['取穴法（指標）'];
     document.getElementById('modal-anatomy').innerText = item.解剖;
-    const mapHtml = (headMap[item.ID] && typeof renderHeadMap === 'function') ? renderHeadMap(item, masterData, headMap, pointMap) : ((typeof renderPointMap === 'function') ? renderPointMap(item, masterData, pointMap) : '');
+    const mapHtml = ((typeof renderRegionMap === 'function') ? renderRegionMap(item, masterData, pointMap) : '') || ((headMap[item.ID] && typeof renderHeadMap === 'function') ? renderHeadMap(item, masterData, headMap, pointMap) : ((typeof renderPointMap === 'function') ? renderPointMap(item, masterData, pointMap) : ''));
     document.getElementById('modal-map').innerHTML = mapHtml;
     document.getElementById('modal-map-row').style.display = mapHtml ? '' : 'none';
     document.getElementById('modal-note').innerText = item['備考（属性タグ・別説含む）'] || "なし";

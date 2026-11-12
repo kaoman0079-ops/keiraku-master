@@ -149,3 +149,42 @@ function renderHeadMap(item, allData, headData, mapData) {
     const note = `<div style="font-size:0.78rem;color:#8E8E93;margin-top:4px">頭頸部の拡大図です。点は大体の位置の目安（精密図ではありません）。線は同じ経絡の流れ、オレンジがこの経穴。</div>`;
     return charts + derma + note;
 }
+
+// ===== 教科書風・部位別拡大図（regions.json + region_map.csv） =====
+// 部位ごとに線画の拡大図を用意し、その部位の経穴を全部のせる。
+// 両側にある経穴は左右対称にミラー表示する（教科書の図版と同じ見え方）。
+let regionMap = {};        // ID -> {region, x, y}
+let regionDefs = null;     // regions.json の regions
+const regionPoints = {};   // region -> [{id, x, y}]
+const REGION_MIRROR = { trunk_front: 230, trunk_back: 230, head_front: 100, head_back: 100 };
+
+function renderRegionMap(item, allData, mapData) {
+    const sel = regionMap[item.ID];
+    if (!sel || !regionDefs || !regionDefs[sel.region]) return '';
+    const def = regionDefs[sel.region];
+    const vb = def.viewBox.split(/\s+/).map(Number);
+    const W = vb[2], H = vb[3];
+    const mid = REGION_MIRROR[sel.region];
+    let dots = '';
+    for (const p of (regionPoints[sel.region] || [])) {
+        if (p.id === item.ID) continue;
+        dots += `<circle cx="${p.x}" cy="${p.y}" r="3.4" fill="#3a3a3a" opacity="0.8"/>`;
+        if (mid && Math.abs(p.x - mid) > 6) {
+            dots += `<circle cx="${2 * mid - p.x}" cy="${p.y}" r="3.4" fill="#3a3a3a" opacity="0.8"/>`;
+        }
+    }
+    const lx = Math.max(36, Math.min(W - 36, sel.x));
+    const ly = sel.y < 34 ? sel.y + 26 : sel.y - 16;
+    const svg = `<svg viewBox="${def.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block" role="img" aria-label="${def.title}の拡大図">
+        <rect x="0" y="0" width="${W}" height="${H}" fill="#FFFFFF"/>
+        ${def.svg}${dots}
+        <circle cx="${sel.x}" cy="${sel.y}" r="9" fill="none" stroke="#C0392B" stroke-width="2.6"/>
+        <circle cx="${sel.x}" cy="${sel.y}" r="3.2" fill="#C0392B"/>
+        <text x="${lx}" y="${ly}" text-anchor="middle" font-size="17" font-weight="bold" fill="#C0392B">${item.経穴名}</text>
+        <text x="10" y="22" font-size="13" fill="#777777">${def.title}</text>
+    </svg>`;
+    const dm = (mapData[item.ID] || {}).dermatome;
+    const derma = dm ? `<div style="margin-top:8px;font-size:0.95rem"><span class="label">デルマトーム</span>${dm} の領域が目安</div>` : '';
+    const note = `<div style="font-size:0.78rem;color:#8E8E93;margin-top:4px">部位別の拡大図（教科書風の線画）です。点は大体の位置の目安、赤い丸がこの経穴。</div>`;
+    return svg + derma + note;
+}
